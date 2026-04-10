@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<title>Firebase Test</title>
+<style>
+  body{font-family:monospace;padding:2rem;background:#111;color:#eee;font-size:15px;}
+  .ok{color:#4caf50;}
+  .err{color:#f44336;}
+  .info{color:#aaa;}
+  button{margin-top:1rem;padding:10px 20px;font-size:15px;cursor:pointer;background:#333;color:#eee;border:1px solid #666;border-radius:6px;}
+  #log{margin-top:1.5rem;line-height:2;}
+</style>
+</head>
+<body>
+<h2>Firebase Connection Test</h2>
+<p class="info">Open browser console (F12) for additional details.</p>
+<button onclick="runTest()">Run Test</button>
+<div id="log"></div>
+
+<script>
+function log(msg, cls) {
+  var el = document.createElement("div");
+  el.className = cls || "info";
+  el.textContent = msg;
+  document.getElementById("log").appendChild(el);
+  console.log(msg);
+}
+
+function runTest() {
+  document.getElementById("log").innerHTML = "";
+  log("Step 1: Loading Firebase app script...");
+
+  var s1 = document.createElement("script");
+  s1.src = "https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js";
+  s1.onload = function() {
+    log("✓ firebase-app loaded", "ok");
+    log("Step 2: Loading Firebase database script...");
+
+    var s2 = document.createElement("script");
+    s2.src = "https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js";
+    s2.onload = function() {
+      log("✓ firebase-database loaded", "ok");
+      log("Step 3: Initializing Firebase app...");
+
+      try {
+        firebase.initializeApp({
+          apiKey: "AIzaSyB1gPk1gCfsuE5kGJ93JhJ1kdpis9layJ0",
+          authDomain: "trivia-pm.firebaseapp.com",
+          databaseURL: "https://trivia-pm-default-rtdb.firebaseio.com",
+          projectId: "trivia-pm",
+          storageBucket: "trivia-pm.firebasestorage.app",
+          messagingSenderId: "319057453477",
+          appId: "1:319057453477:web:3ad1fe6349cfbaa4e6484c"
+        });
+        log("✓ Firebase app initialized", "ok");
+      } catch(e) {
+        log("✗ Init error: " + e.message, "err");
+        return;
+      }
+
+      var db = firebase.database();
+      log("✓ Got database reference", "ok");
+      log("Step 4: Writing test entry...");
+
+      var entry = { name: "TestUser", score: 999, date: new Date().toLocaleDateString() };
+      db.ref("vocab_leaderboard").push(entry)
+        .then(function(ref) {
+          log("✓ Write succeeded! Key: " + ref.key, "ok");
+          log("Step 5: Reading back leaderboard...");
+          return db.ref("vocab_leaderboard").orderByChild("score").limitToLast(5).once("value");
+        })
+        .then(function(snap) {
+          var entries = [];
+          snap.forEach(function(c) { entries.unshift(c.val()); });
+          log("✓ Read succeeded! Found " + entries.length + " entries:", "ok");
+          entries.forEach(function(e) {
+            log("  → " + e.name + " | " + e.score + " pts | " + e.date, "ok");
+          });
+          log("All tests passed! Firebase is working correctly.", "ok");
+        })
+        .catch(function(e) {
+          log("✗ Database error: " + e.message, "err");
+          log("  Code: " + e.code, "err");
+          log("  This is likely a Firebase Rules issue. Check your Realtime Database rules.", "err");
+        });
+    };
+    s2.onerror = function() { log("✗ Failed to load firebase-database script", "err"); };
+    document.head.appendChild(s2);
+  };
+  s1.onerror = function() { log("✗ Failed to load firebase-app script", "err"); };
+  document.head.appendChild(s1);
+}
+</script>
+</body>
+</html>
