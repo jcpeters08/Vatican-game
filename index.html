@@ -4,14 +4,110 @@
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
 <title>Vocab Exchange Challenge</title>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.2.0/umd/react.production.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.production.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/7.23.2/babel.min.js"></script>
-<script type="module">
-import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-import { getDatabase, ref, push, query, orderByChild, limitToLast, get } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
+<style>
+*{box-sizing:border-box;margin:0;padding:0;}
+body{background:#1a0e05;min-height:100vh;font-family:Georgia,serif;color:#e8d5b0;}
+.wrap{min-height:100vh;background:linear-gradient(160deg,#1a0e05 0%,#2d1a0a 50%,#1a0e05 100%);padding-bottom:3rem;}
+.scr{max-width:500px;margin:0 auto;padding:2rem 1.25rem;}
+.crest{text-align:center;font-size:36px;color:#c9a84c;margin:1rem 0 0.5rem;}
+.title{font-size:22px;font-weight:600;color:#c9a84c;letter-spacing:2px;text-align:center;text-transform:uppercase;}
+.subtitle{font-size:14px;color:#a07840;text-align:center;font-style:italic;margin-bottom:0.25rem;}
+.divider{display:flex;align-items:center;gap:10px;margin:1.25rem 0;color:#6b4a1e;}
+.divider-line{flex:1;height:1px;background:linear-gradient(90deg,transparent,#6b4a1e,transparent);}
+.card{background:rgba(30,18,6,0.8);border:1px solid #5a3d1a;border-radius:12px;padding:1.5rem;}
+.card-inner{border:1px solid rgba(180,130,50,0.2);border-radius:8px;padding:1.25rem;}
+input[type=text]{width:100%;background:rgba(0,0,0,0.3);border:1px solid #5a3d1a;border-radius:8px;padding:12px 16px;color:#e8d5b0;font-family:Georgia,serif;font-size:16px;margin-bottom:12px;display:block;}
+input[type=text]:focus{outline:none;border-color:#c9a84c;}
+input::placeholder{color:#6b4a1e;}
+.btn{width:100%;padding:12px;border-radius:8px;font-family:Georgia,serif;font-size:13px;letter-spacing:1.5px;cursor:pointer;text-transform:uppercase;margin-bottom:8px;border:1px solid #c9a84c;background:rgba(180,130,50,0.15);color:#c9a84c;}
+.btn-ghost{width:100%;padding:12px;border-radius:8px;font-family:Georgia,serif;font-size:13px;letter-spacing:1.5px;cursor:pointer;text-transform:uppercase;margin-bottom:8px;background:transparent;border:1px solid #5a3d1a;color:#a07840;}
+.hud{display:flex;justify-content:space-between;align-items:center;margin-bottom:1rem;font-size:12px;letter-spacing:1px;color:#a07840;}
+.progress{height:2px;background:#2d1a0a;border-radius:1px;margin-bottom:1.5rem;}
+.progress-fill{height:100%;background:linear-gradient(90deg,#6b4a1e,#c9a84c);transition:width 0.3s;}
+.qcard{background:rgba(20,12,3,0.9);border:1px solid #5a3d1a;border-radius:12px;padding:1.5rem;margin-bottom:1.25rem;text-align:center;}
+.dir-label{font-size:11px;letter-spacing:2px;color:#6b4a1e;text-transform:uppercase;margin-bottom:12px;}
+.qword{font-size:26px;font-weight:500;color:#e8d5b0;line-height:1.3;}
+.choices{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:1rem;}
+.choice{background:rgba(20,12,3,0.8);border:1px solid #3d2510;border-radius:8px;padding:14px 10px;font-family:Georgia,serif;font-size:15px;color:#c8b090;cursor:pointer;text-align:center;line-height:1.3;width:100%;}
+.choice.correct{background:rgba(30,70,30,0.5);border-color:#4a8a4a;color:#8fcc8f;}
+.choice.wrong{background:rgba(70,20,20,0.5);border-color:#8a3030;color:#cc8080;}
+.quip{text-align:center;font-style:italic;font-size:15px;color:#a07840;margin-bottom:1rem;}
+.score-big{font-size:48px;color:#c9a84c;text-align:center;margin:1rem 0 4px;}
+.score-sub{text-align:center;font-size:14px;color:#6b4a1e;font-style:italic;margin-bottom:1.5rem;}
+.lb-row{display:flex;align-items:center;gap:12px;padding:10px 0;border-bottom:1px solid rgba(90,61,26,0.3);}
+.lb-rank{font-size:13px;min-width:28px;}
+.lb-name{flex:1;font-size:16px;color:#c8b090;}
+.lb-score{font-size:15px;color:#c9a84c;font-weight:600;}
+.lb-date{font-size:12px;color:#4a3010;min-width:60px;text-align:right;}
+.ornament{text-align:center;color:#6b4a1e;font-size:18px;margin:1rem 0;letter-spacing:8px;}
+.note{text-align:center;font-size:13px;color:#4a3010;font-style:italic;}
+.loading{text-align:center;color:#6b4a1e;font-style:italic;padding:1rem;}
+.urgent{color:#c0392b !important;}
+.hidden{display:none;}
+</style>
+</head>
+<body>
 
-const app = initializeApp({
+<!-- HOME -->
+<div id="s-home" class="wrap"><div class="scr">
+  <div class="crest">✝</div>
+  <div class="title">Vocab Exchange</div>
+  <div class="subtitle">Spanish · English · 15 Questions</div>
+  <div class="divider"><div class="divider-line"></div><span style="font-size:12px">✦</span><div class="divider-line"></div></div>
+  <div class="card"><div class="card-inner">
+    <input type="text" id="name-input" placeholder="Enter your name"/>
+    <button class="btn" onclick="startGame()">Begin the Examination</button>
+    <button class="btn-ghost" onclick="goBoard()">Hall of Records</button>
+  </div></div>
+  <div class="ornament">· · ·</div>
+  <div class="note">Speed earns grace.</div>
+</div></div>
+
+<!-- PLAYING -->
+<div id="s-playing" class="wrap hidden"><div class="scr">
+  <div class="hud">
+    <span id="hud-q">1 / 15</span>
+    <span id="hud-timer" style="color:#c9a84c;font-weight:600;font-size:14px">⏱ 15s</span>
+    <span id="hud-score">0 pts</span>
+  </div>
+  <div class="progress"><div class="progress-fill" id="progress-fill" style="width:0%"></div></div>
+  <div class="qcard">
+    <div class="dir-label" id="dir-label"></div>
+    <div class="qword" id="qword"></div>
+  </div>
+  <div class="choices" id="choices"></div>
+  <div id="after-answer" class="hidden">
+    <div class="quip" id="quip"></div>
+    <button class="btn" id="next-btn" onclick="nextQuestion()">Next Question</button>
+  </div>
+</div></div>
+
+<!-- RESULT -->
+<div id="s-result" class="wrap hidden"><div class="scr">
+  <div class="crest">✝</div>
+  <div class="title">Judgment</div>
+  <div class="divider"><div class="divider-line"></div><span style="font-size:12px">✦</span><div class="divider-line"></div></div>
+  <div class="score-big" id="result-score"></div>
+  <div class="score-sub" id="result-sub"></div>
+  <div class="card" style="margin-bottom:1.5rem;text-align:center;font-style:italic;font-size:15px;color:#a07840;line-height:1.6" id="result-msg"></div>
+  <button class="btn" onclick="startGame()">Examine Again</button>
+  <button class="btn-ghost" onclick="goBoard()">Hall of Records</button>
+  <button class="btn-ghost" onclick="goHome()">Change Penitent</button>
+</div></div>
+
+<!-- BOARD -->
+<div id="s-board" class="wrap hidden"><div class="scr">
+  <div class="title">Hall of Records</div>
+  <div class="subtitle">Top 20 · All Time</div>
+  <div class="divider"><div class="divider-line"></div><span style="font-size:12px">✦</span><div class="divider-line"></div></div>
+  <div id="lb-content"><div class="loading">Consulting the archives…</div></div>
+  <div class="ornament">· · ·</div>
+  <button class="btn-ghost" onclick="showScreen('home')">Return</button>
+</div></div>
+
+<script>
+// ── Firebase (loaded inline via XHR-free dynamic script) ──────────────────
+var FIREBASE_CONFIG = {
   apiKey: "AIzaSyB1gPk1gCfsuE5kGJ93JhJ1kdpis9layJ0",
   authDomain: "trivia-pm.firebaseapp.com",
   databaseURL: "https://trivia-pm-default-rtdb.firebaseio.com",
@@ -19,36 +115,46 @@ const app = initializeApp({
   storageBucket: "trivia-pm.firebasestorage.app",
   messagingSenderId: "319057453477",
   appId: "1:319057453477:web:3ad1fe6349cfbaa4e6484c"
-});
-const db = getDatabase(app);
-
-window.fbSave = async (entry) => {
-  await push(ref(db, "vocab_leaderboard"), entry);
 };
 
-window.fbFetch = async () => {
-  const q = query(ref(db, "vocab_leaderboard"), orderByChild("score"), limitToLast(20));
-  const snap = await get(q);
-  const entries = [];
-  snap.forEach(child => entries.unshift(child.val()));
-  return entries;
-};
-</script>
-<style>
-*{box-sizing:border-box;margin:0;padding:0;}
-body{background:#1a0e05;min-height:100vh;}
-input{font-family:Georgia,serif;}
-button{font-family:Georgia,serif;}
-input::placeholder{color:#6b4a1e;}
-input:focus{outline:none;}
-</style>
-</head>
-<body>
-<div id="root"></div>
-<script type="text/babel">
-const { useState, useEffect, useRef } = React;
+var fbReady = false;
+var fbDb = null;
 
-const vocab = [
+function loadFirebase(cb) {
+  var s1 = document.createElement("script");
+  s1.src = "https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js";
+  s1.onload = function() {
+    var s2 = document.createElement("script");
+    s2.src = "https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js";
+    s2.onload = function() {
+      firebase.initializeApp(FIREBASE_CONFIG);
+      fbDb = firebase.database();
+      fbReady = true;
+      cb();
+    };
+    document.head.appendChild(s2);
+  };
+  document.head.appendChild(s1);
+}
+
+function fbSave(entry) {
+  if (!fbReady) return Promise.resolve();
+  return fbDb.ref("vocab_leaderboard").push(entry);
+}
+
+function fbFetch() {
+  if (!fbReady) return Promise.resolve([]);
+  return fbDb.ref("vocab_leaderboard")
+    .orderByChild("score").limitToLast(20).once("value")
+    .then(function(snap) {
+      var entries = [];
+      snap.forEach(function(c) { entries.unshift(c.val()); });
+      return entries;
+    });
+}
+
+// ── Vocab ─────────────────────────────────────────────────────────────────
+var vocab = [
   ["el Vaticano","the Vatican"],["la residencia","the residence"],["el fresco","the fresco"],
   ["la máquina de espresso","the espresso machine"],["la cava de vinos","the wine cellar"],
   ["el aristócrata","the aristocrat"],["el sommelier","the sommelier"],["la santidad","holiness"],
@@ -78,293 +184,205 @@ const vocab = [
   ["al parecer","apparently"],["en cambio","in contrast / instead"],["entonces","then"],
   ["inevitablemente","inevitably"],["al final","in the end"],["porque","because"],
   ["ya que","since / given that"],["es decir","that is to say"],["por ejemplo","for example"],
-  ["de hecho","in fact"],
+  ["de hecho","in fact"]
 ];
 
-const correctQuips = [
+var correctQuips = [
   "Infallible. Basically papal.","The Codex approves.","Cardinal knowledge.",
   "Even the sommelier is impressed.","Holiness has its perks.",
   "The Swiss Guards salute you.","The marble positively gleams.",
   "His Holiness nods approvingly.","The wine cellar opens its doors.",
   "A vestment of triumph.","The fresco was painted in your honor.",
   "The Vespa revs in celebration.","Gravitas achieved.",
-  "The library adds your name to the manuscripts.","Alta costura intellect.",
+  "The library adds your name to the manuscripts.","Alta costura intellect."
 ];
-
-const wrongQuips = [
+var wrongQuips = [
   "The Swiss Guards are judging you.","The Pope is reflecting on this.",
   "A vestment of shame.","Even the Vespa could have done better.",
   "The marble weeps.","The sommelier has left the building.",
   "The cardinal is deeply disappointed.","The fresco is cracking.",
-  "His Holiness will pray for you.","The wine cellar remains locked.",
+  "His Holiness will pray for you.","The wine cellar remains locked."
 ];
 
-const ROUND_SIZE = 15;
-const TIME_PER_Q = 15;
+// ── Game state ────────────────────────────────────────────────────────────
+var ROUND_SIZE = 15;
+var TIME_PER_Q = 15;
+var playerName = "";
+var questions = [];
+var qIdx = 0;
+var score = 0;
+var timerVal = TIME_PER_Q;
+var timerInterval = null;
+var answered = false;
 
 function pick(arr) { return arr[Math.floor(Math.random() * arr.length)]; }
 function shuffle(arr) {
-  const a = [...arr];
-  for (let i = a.length - 1; i > 0; i--) {
-    const j = Math.floor(Math.random() * (i + 1));
-    [a[i], a[j]] = [a[j], a[i]];
+  var a = arr.slice();
+  for (var i = a.length - 1; i > 0; i--) {
+    var j = Math.floor(Math.random() * (i + 1));
+    var tmp = a[i]; a[i] = a[j]; a[j] = tmp;
   }
   return a;
 }
 
 function buildQuestions() {
-  const used = new Set();
-  const result = [];
-  for (let n = 0; n < ROUND_SIZE; n++) {
-    const available = vocab.filter((_, i) => !used.has(i));
-    const pool = available.length >= 4 ? available : vocab;
-    const pair = pick(pool);
-    used.add(vocab.indexOf(pair));
-    const [es, en] = pair;
-    const dir = Math.random() < 0.5 ? "es2en" : "en2es";
-    const prompt = dir === "es2en" ? es : en;
-    const answer = dir === "es2en" ? en : es;
-    const wrong = shuffle(vocab.filter(p => p !== pair)).slice(0, 3).map(p => dir === "es2en" ? p[1] : p[0]);
-    result.push({ prompt, answer, choices: shuffle([answer, ...wrong]), dir });
+  var used = {};
+  var result = [];
+  for (var n = 0; n < ROUND_SIZE; n++) {
+    var available = vocab.filter(function(_, i) { return !used[i]; });
+    var pool = available.length >= 4 ? available : vocab;
+    var pair = pick(pool);
+    used[vocab.indexOf(pair)] = true;
+    var es = pair[0], en = pair[1];
+    var dir = Math.random() < 0.5 ? "es2en" : "en2es";
+    var prompt = dir === "es2en" ? es : en;
+    var answer = dir === "es2en" ? en : es;
+    var wrong = shuffle(vocab.filter(function(p) { return p !== pair; })).slice(0, 3).map(function(p) {
+      return dir === "es2en" ? p[1] : p[0];
+    });
+    result.push({ prompt: prompt, answer: answer, choices: shuffle([answer].concat(wrong)), dir: dir });
   }
   return result;
 }
 
-const col = {
-  bg: "#1a0e05", bg2: "#2d1a0a", bg3: "rgba(20,12,3,0.9)",
-  gold: "#c9a84c", goldDim: "#a07840", goldFaint: "#6b4a1e",
-  text: "#e8d5b0", textDim: "#c8b090", border: "#5a3d1a", borderDark: "#3d2510",
-};
-
-function Divider() {
-  return (
-    <div style={{display:"flex",alignItems:"center",gap:10,margin:"1.25rem 0",color:col.goldFaint}}>
-      <div style={{flex:1,height:1,background:"linear-gradient(90deg,transparent,#6b4a1e,transparent)"}}/>
-      <span style={{fontSize:12}}>✦</span>
-      <div style={{flex:1,height:1,background:"linear-gradient(90deg,transparent,#6b4a1e,transparent)"}}/>
-    </div>
-  );
+// ── Screens ───────────────────────────────────────────────────────────────
+function showScreen(id) {
+  ["home","playing","result","board"].forEach(function(s) {
+    document.getElementById("s-" + s).classList.toggle("hidden", s !== id);
+  });
 }
 
-function ChoiceButton({ c, selected, answer, onSelect }) {
-  let bg = col.bg3, border = col.borderDark, color = col.textDim;
-  if (selected) {
-    if (c === answer)       { bg="rgba(30,70,30,0.5)";  border="#4a8a4a"; color="#8fcc8f"; }
-    else if (c === selected){ bg="rgba(70,20,20,0.5)";  border="#8a3030"; color="#cc8080"; }
-  }
-  return (
-    <button
-      onClick={() => !selected && onSelect(c)}
-      style={{background:bg,border:`1px solid ${border}`,borderRadius:8,padding:"14px 10px",
-        fontSize:15,color,lineHeight:1.3,cursor:selected?"default":"pointer",width:"100%",textAlign:"center"}}
-    >{c}</button>
-  );
+function goHome() {
+  document.getElementById("name-input").value = "";
+  playerName = "";
+  showScreen("home");
 }
 
-function btn(ghost) {
-  return {
-    width:"100%",padding:12,borderRadius:8,fontSize:13,letterSpacing:"1.5px",
-    cursor:"pointer",textTransform:"uppercase",marginBottom:8,
-    border: ghost ? `1px solid ${col.border}` : `1px solid ${col.gold}`,
-    background: ghost ? "transparent" : "rgba(180,130,50,0.15)",
-    color: ghost ? col.goldDim : col.gold,
-  };
+// ── Game flow ─────────────────────────────────────────────────────────────
+function startGame() {
+  var n = document.getElementById("name-input").value.trim();
+  if (!n) return;
+  playerName = n;
+  questions = buildQuestions();
+  qIdx = 0; score = 0;
+  showScreen("playing");
+  renderQuestion();
 }
 
-function App() {
-  const [screen, setScreen]         = useState("home");
-  const [name, setName]             = useState("");
-  const [questions, setQuestions]   = useState([]);
-  const [qIdx, setQIdx]             = useState(0);
-  const [score, setScore]           = useState(0);
-  const [selected, setSelected]     = useState(null);
-  const [timer, setTimer]           = useState(TIME_PER_Q);
-  const [quip, setQuip]             = useState("");
-  const [leaderboard, setLB]        = useState([]);
-  const [loadingLB, setLoadingLB]   = useState(false);
-  const [finalScore, setFinalScore] = useState(0);
-  const timerRef    = useRef(null);
-  const selectedRef = useRef(null);
-  const scoreRef    = useRef(0);
+function renderQuestion() {
+  answered = false;
+  clearInterval(timerInterval);
+  timerVal = TIME_PER_Q;
+  var q = questions[qIdx];
+  document.getElementById("hud-q").textContent = (qIdx + 1) + " / " + ROUND_SIZE;
+  document.getElementById("hud-score").textContent = score + " pts";
+  document.getElementById("progress-fill").style.width = ((qIdx / ROUND_SIZE) * 100) + "%";
+  document.getElementById("dir-label").textContent = q.dir === "es2en" ? "Spanish → English" : "English → Spanish";
+  document.getElementById("qword").textContent = q.prompt;
+  document.getElementById("after-answer").classList.add("hidden");
 
-  const fetchLB = async () => {
-    setLoadingLB(true);
-    try {
-      const entries = await window.fbFetch();
-      setLB(entries);
-    } catch(e) {
-      console.error("fetchLB error:", e);
+  var choicesEl = document.getElementById("choices");
+  choicesEl.innerHTML = "";
+  q.choices.forEach(function(c) {
+    var btn = document.createElement("button");
+    btn.className = "choice";
+    btn.textContent = c;
+    btn.onclick = function() { handleAnswer(c); };
+    choicesEl.appendChild(btn);
+  });
+
+  updateTimer();
+  timerInterval = setInterval(function() {
+    timerVal--;
+    updateTimer();
+    if (timerVal <= 0) {
+      clearInterval(timerInterval);
+      handleAnswer(null);
     }
-    setLoadingLB(false);
-  };
-
-  const saveLB = async (entry) => {
-    try {
-      await window.fbSave(entry);
-    } catch(e) {
-      console.error("saveLB error:", e);
-    }
-  };
-
-  const startGame = () => {
-    if (!name.trim()) return;
-    const qs = buildQuestions();
-    selectedRef.current = null;
-    scoreRef.current = 0;
-    setQuestions(qs);
-    setQIdx(0);
-    setScore(0);
-    setSelected(null);
-    setTimer(TIME_PER_Q);
-    setScreen("playing");
-  };
-
-  useEffect(() => {
-    if (screen !== "playing") return;
-    clearInterval(timerRef.current);
-    selectedRef.current = null;
-    timerRef.current = setInterval(() => {
-      setTimer(t => {
-        if (t <= 1) {
-          clearInterval(timerRef.current);
-          if (!selectedRef.current) handleAnswer(null);
-          return 0;
-        }
-        return t - 1;
-      });
-    }, 1000);
-    return () => clearInterval(timerRef.current);
-  }, [screen, qIdx]);
-
-  const handleAnswer = (choice) => {
-    if (selectedRef.current) return;
-    clearInterval(timerRef.current);
-    const val = choice || "__timeout__";
-    selectedRef.current = val;
-    setSelected(val);
-    const q = questions[qIdx];
-    const correct = choice === q.answer;
-    const pts = correct ? Math.max(1, timer) * 10 : 0;
-    scoreRef.current = scoreRef.current + pts;
-    setQuip(pick(correct ? correctQuips : wrongQuips));
-    setScore(s => s + pts);
-  };
-
-  const next = async () => {
-    if (qIdx + 1 >= ROUND_SIZE) {
-      const fs = scoreRef.current;
-      setFinalScore(fs);
-      const entry = { name: name.trim(), score: fs, date: new Date().toLocaleDateString() };
-      await saveLB(entry);
-      setScreen("result");
-    } else {
-      selectedRef.current = null;
-      setSelected(null);
-      setTimer(TIME_PER_Q);
-      setQIdx(i => i + 1);
-    }
-  };
-
-  const wrap = {minHeight:"100vh",background:`linear-gradient(160deg,${col.bg} 0%,${col.bg2} 50%,${col.bg} 100%)`,color:col.text,fontFamily:"Georgia,serif",padding:"0 0 3rem"};
-  const scr  = {maxWidth:500,margin:"0 auto",padding:"2rem 1.25rem"};
-
-  if (screen === "home") return (
-    <div style={wrap}><div style={scr}>
-      <div style={{textAlign:"center",fontSize:36,color:col.gold,margin:"1rem 0 0.5rem"}}>✝</div>
-      <div style={{fontSize:22,fontWeight:600,color:col.gold,letterSpacing:2,textAlign:"center",textTransform:"uppercase"}}>Vocab Exchange</div>
-      <div style={{fontSize:14,color:col.goldDim,textAlign:"center",fontStyle:"italic",marginBottom:"0.25rem"}}>Spanish · English · 15 Questions</div>
-      <Divider/>
-      <div style={{background:"rgba(30,18,6,0.8)",border:`1px solid ${col.border}`,borderRadius:12,padding:"1.5rem"}}>
-        <div style={{border:"1px solid rgba(180,130,50,0.2)",borderRadius:8,padding:"1.25rem"}}>
-          <input type="text" placeholder="Enter your name" value={name}
-            onChange={e => setName(e.target.value)}
-            onKeyDown={e => e.key==="Enter" && startGame()}
-            style={{width:"100%",background:"rgba(0,0,0,0.3)",border:`1px solid ${col.border}`,borderRadius:8,padding:"12px 16px",color:col.text,fontSize:16,marginBottom:12,boxSizing:"border-box"}}/>
-          <button onClick={startGame} style={btn(false)}>Begin the Examination</button>
-          <button onClick={async()=>{await fetchLB();setScreen("board");}} style={btn(true)}>Hall of Records</button>
-        </div>
-      </div>
-      <div style={{textAlign:"center",color:col.goldFaint,fontSize:18,margin:"1rem 0",letterSpacing:8}}>· · ·</div>
-      <div style={{textAlign:"center",fontSize:13,color:"#4a3010",fontStyle:"italic"}}>Speed earns grace.</div>
-    </div></div>
-  );
-
-  if (screen === "playing") {
-    const q = questions[qIdx];
-    if (!q) return null;
-    return (
-      <div style={wrap}><div style={scr}>
-        <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:"1rem",fontSize:12,letterSpacing:1,color:col.goldDim}}>
-          <span>{qIdx+1} / {ROUND_SIZE}</span>
-          <span style={{color:timer<=5?"#c0392b":col.gold,fontWeight:600,fontSize:14}}>⏱ {timer}s</span>
-          <span>{score} pts</span>
-        </div>
-        <div style={{height:2,background:col.bg2,borderRadius:1,marginBottom:"1.5rem"}}>
-          <div style={{height:"100%",background:`linear-gradient(90deg,${col.goldFaint},${col.gold})`,width:`${(qIdx/ROUND_SIZE)*100}%`}}/>
-        </div>
-        <div style={{background:col.bg3,border:`1px solid ${col.border}`,borderRadius:12,padding:"1.5rem",marginBottom:"1.25rem",textAlign:"center"}}>
-          <div style={{fontSize:11,letterSpacing:2,color:col.goldFaint,textTransform:"uppercase",marginBottom:12}}>
-            {q.dir==="es2en"?"Spanish → English":"English → Spanish"}
-          </div>
-          <div style={{fontSize:26,fontWeight:500,color:col.text,lineHeight:1.3}}>{q.prompt}</div>
-        </div>
-        <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:8,marginBottom:"1rem"}}>
-          {q.choices.map(c => <ChoiceButton key={c} c={c} selected={selected} answer={q.answer} onSelect={handleAnswer}/>)}
-        </div>
-        {selected && <>
-          <div style={{textAlign:"center",fontStyle:"italic",fontSize:15,color:col.goldDim,marginBottom:"1rem"}}>{quip}</div>
-          <button onClick={next} style={btn(false)}>
-            {qIdx+1>=ROUND_SIZE?"View Your Judgment":"Next Question"}
-          </button>
-        </>}
-      </div></div>
-    );
-  }
-
-  if (screen === "result") {
-    const msg = finalScore>=1200?"The Codex shall remember your name."
-      :finalScore>=800?"A commendable examination. The cardinal approves."
-      :finalScore>=400?"Further study is recommended."
-      :"The Swiss Guards are escorting you out.";
-    return (
-      <div style={wrap}><div style={scr}>
-        <div style={{textAlign:"center",fontSize:36,color:col.gold,margin:"1rem 0 0.5rem"}}>✝</div>
-        <div style={{fontSize:22,fontWeight:600,color:col.gold,letterSpacing:2,textAlign:"center",textTransform:"uppercase"}}>Judgment</div>
-        <Divider/>
-        <div style={{fontSize:48,color:col.gold,textAlign:"center",margin:"1rem 0 4px"}}>{finalScore}</div>
-        <div style={{textAlign:"center",fontSize:14,color:col.goldFaint,fontStyle:"italic",marginBottom:"1.5rem"}}>{name} · {new Date().toLocaleDateString()}</div>
-        <div style={{background:"rgba(30,18,6,0.8)",border:`1px solid ${col.border}`,borderRadius:12,padding:"1.25rem",marginBottom:"1.5rem",textAlign:"center",fontSize:15,color:col.goldDim,fontStyle:"italic",lineHeight:1.6}}>{msg}</div>
-        <button onClick={startGame} style={btn(false)}>Examine Again</button>
-        <button onClick={async()=>{await fetchLB();setScreen("board");}} style={btn(true)}>Hall of Records</button>
-        <button onClick={()=>{setScreen("home");setName("");}} style={btn(true)}>Change Penitent</button>
-      </div></div>
-    );
-  }
-
-  if (screen === "board") return (
-    <div style={wrap}><div style={scr}>
-      <div style={{fontSize:22,fontWeight:600,color:col.gold,letterSpacing:2,textAlign:"center",textTransform:"uppercase"}}>Hall of Records</div>
-      <div style={{fontSize:14,color:col.goldDim,textAlign:"center",fontStyle:"italic"}}>Top 20 · All Time</div>
-      <Divider/>
-      {loadingLB && <div style={{textAlign:"center",color:col.goldFaint,fontStyle:"italic",padding:"1rem"}}>Consulting the archives…</div>}
-      {!loadingLB && leaderboard.length===0 && <div style={{textAlign:"center",color:col.goldFaint,fontStyle:"italic",padding:"1rem"}}>The archives are empty. Be the first.</div>}
-      {!loadingLB && leaderboard.map((e,i) => (
-        <div key={i} style={{display:"flex",alignItems:"center",gap:12,padding:"10px 0",borderBottom:"1px solid rgba(90,61,26,0.3)"}}>
-          <span style={{fontSize:13,color:i===0?col.gold:i===1?"#a0a0b0":i===2?"#c08050":col.goldFaint,minWidth:28}}>#{i+1}</span>
-          <span style={{flex:1,fontSize:16,color:col.textDim}}>{e.name}</span>
-          <span style={{fontSize:15,color:col.gold,fontWeight:600}}>{e.score}</span>
-          <span style={{fontSize:12,color:"#4a3010",minWidth:60,textAlign:"right"}}>{e.date}</span>
-        </div>
-      ))}
-      <div style={{textAlign:"center",color:col.goldFaint,fontSize:18,margin:"1rem 0",letterSpacing:8}}>· · ·</div>
-      <button onClick={()=>setScreen("home")} style={btn(true)}>Return</button>
-    </div></div>
-  );
-
-  return null;
+  }, 1000);
 }
 
-ReactDOM.createRoot(document.getElementById("root")).render(<App/>);
+function updateTimer() {
+  var el = document.getElementById("hud-timer");
+  el.textContent = "⏱ " + timerVal + "s";
+  el.classList.toggle("urgent", timerVal <= 5);
+}
+
+function handleAnswer(choice) {
+  if (answered) return;
+  answered = true;
+  clearInterval(timerInterval);
+  var q = questions[qIdx];
+  var correct = choice === q.answer;
+  var pts = correct ? Math.max(1, timerVal) * 10 : 0;
+  score += pts;
+  document.getElementById("hud-score").textContent = score + " pts";
+
+  var btns = document.getElementById("choices").querySelectorAll("button");
+  btns.forEach(function(btn) {
+    btn.onclick = null;
+    if (btn.textContent === q.answer) btn.classList.add("correct");
+    else if (btn.textContent === choice) btn.classList.add("wrong");
+  });
+
+  document.getElementById("quip").textContent = pick(correct ? correctQuips : wrongQuips);
+  var nextBtn = document.getElementById("next-btn");
+  nextBtn.textContent = (qIdx + 1 >= ROUND_SIZE) ? "View Your Judgment" : "Next Question";
+  document.getElementById("after-answer").classList.remove("hidden");
+}
+
+function nextQuestion() {
+  if (qIdx + 1 >= ROUND_SIZE) {
+    finishGame();
+  } else {
+    qIdx++;
+    renderQuestion();
+  }
+}
+
+function finishGame() {
+  var fs = score;
+  var entry = { name: playerName, score: fs, date: new Date().toLocaleDateString() };
+  fbSave(entry).catch(function(e) { console.error("Save error:", e); });
+  document.getElementById("result-score").textContent = fs;
+  document.getElementById("result-sub").textContent = playerName + " · " + new Date().toLocaleDateString();
+  var msg = fs >= 1200 ? "The Codex shall remember your name."
+    : fs >= 800 ? "A commendable examination. The cardinal approves."
+    : fs >= 400 ? "Further study is recommended."
+    : "The Swiss Guards are escorting you out.";
+  document.getElementById("result-msg").textContent = msg;
+  showScreen("result");
+}
+
+function goBoard() {
+  showScreen("board");
+  document.getElementById("lb-content").innerHTML = '<div class="loading">Consulting the archives…</div>';
+  fbFetch().then(function(entries) {
+    if (!entries || entries.length === 0) {
+      document.getElementById("lb-content").innerHTML = '<div class="loading">The archives are empty. Be the first.</div>';
+      return;
+    }
+    var rankColors = ["#c9a84c","#a0a0b0","#c08050"];
+    var html = entries.map(function(e, i) {
+      var rc = rankColors[i] || "#6b4a1e";
+      return '<div class="lb-row">'
+        + '<span class="lb-rank" style="color:' + rc + '">#' + (i+1) + '</span>'
+        + '<span class="lb-name">' + e.name + '</span>'
+        + '<span class="lb-score">' + e.score + '</span>'
+        + '<span class="lb-date">' + e.date + '</span>'
+        + '</div>';
+    }).join("");
+    document.getElementById("lb-content").innerHTML = html;
+  }).catch(function(e) {
+    console.error("Fetch error:", e);
+    document.getElementById("lb-content").innerHTML = '<div class="loading">Could not load records.</div>';
+  });
+}
+
+// ── Boot ──────────────────────────────────────────────────────────────────
+loadFirebase(function() {
+  console.log("Firebase ready");
+});
 </script>
 </body>
 </html>
