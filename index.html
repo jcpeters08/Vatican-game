@@ -7,10 +7,11 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.2.0/umd/react.production.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.production.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/7.23.2/babel.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/firebase@9.23.0/compat/app.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/firebase@9.23.0/compat/database.min.js"></script>
-<script>
-firebase.initializeApp({
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+import { getDatabase, ref, push, query, orderByChild, limitToLast, get } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
+
+const app = initializeApp({
   apiKey: "AIzaSyB1gPk1gCfsuE5kGJ93JhJ1kdpis9layJ0",
   authDomain: "trivia-pm.firebaseapp.com",
   databaseURL: "https://trivia-pm-default-rtdb.firebaseio.com",
@@ -19,7 +20,19 @@ firebase.initializeApp({
   messagingSenderId: "319057453477",
   appId: "1:319057453477:web:3ad1fe6349cfbaa4e6484c"
 });
-const db = firebase.database();
+const db = getDatabase(app);
+
+window.fbSave = async (entry) => {
+  await push(ref(db, "vocab_leaderboard"), entry);
+};
+
+window.fbFetch = async () => {
+  const q = query(ref(db, "vocab_leaderboard"), orderByChild("score"), limitToLast(20));
+  const snap = await get(q);
+  const entries = [];
+  snap.forEach(child => entries.unshift(child.val()));
+  return entries;
+};
 </script>
 <style>
 *{box-sizing:border-box;margin:0;padding:0;}
@@ -177,9 +190,7 @@ function App() {
   const fetchLB = async () => {
     setLoadingLB(true);
     try {
-      const snap = await db.ref("vocab_leaderboard").orderByChild("score").limitToLast(20).once("value");
-      const entries = [];
-      snap.forEach(child => entries.unshift(child.val()));
+      const entries = await window.fbFetch();
       setLB(entries);
     } catch(e) {
       console.error("fetchLB error:", e);
@@ -189,7 +200,7 @@ function App() {
 
   const saveLB = async (entry) => {
     try {
-      await db.ref("vocab_leaderboard").push(entry);
+      await window.fbSave(entry);
     } catch(e) {
       console.error("saveLB error:", e);
     }
