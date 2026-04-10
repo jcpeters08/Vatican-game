@@ -1,0 +1,378 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Vocab Exchange Challenge</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0;}
+body{background:#1a0e05;min-height:100vh;font-family:Georgia,serif;color:#e8d5b0;}
+.wrap{min-height:100vh;background:linear-gradient(160deg,#1a0e05 0%,#2d1a0a 50%,#1a0e05 100%);padding-bottom:3rem;}
+.scr{max-width:500px;margin:0 auto;padding:2rem 1.25rem;}
+.crest{text-align:center;font-size:36px;color:#c9a84c;margin:1rem 0 0.5rem;}
+.title{font-size:22px;font-weight:600;color:#c9a84c;letter-spacing:2px;text-align:center;text-transform:uppercase;}
+.subtitle{font-size:14px;color:#a07840;text-align:center;font-style:italic;margin-bottom:0.25rem;}
+.divider{display:flex;align-items:center;gap:10px;margin:1.25rem 0;color:#6b4a1e;}
+.divider-line{flex:1;height:1px;background:linear-gradient(90deg,transparent,#6b4a1e,transparent);}
+.card{background:rgba(30,18,6,0.8);border:1px solid #5a3d1a;border-radius:12px;padding:1.5rem;}
+.card-inner{border:1px solid rgba(180,130,50,0.2);border-radius:8px;padding:1.25rem;}
+input[type=text]{width:100%;background:rgba(0,0,0,0.3);border:1px solid #5a3d1a;border-radius:8px;padding:12px 16px;color:#e8d5b0;font-family:Georgia,serif;font-size:16px;margin-bottom:12px;display:block;}
+input[type=text]:focus{outline:none;border-color:#c9a84c;}
+input::placeholder{color:#6b4a1e;}
+.btn{width:100%;padding:12px;border-radius:8px;font-family:Georgia,serif;font-size:13px;letter-spacing:1.5px;cursor:pointer;text-transform:uppercase;margin-bottom:8px;border:1px solid #c9a84c;background:rgba(180,130,50,0.15);color:#c9a84c;}
+.btn-ghost{width:100%;padding:12px;border-radius:8px;font-family:Georgia,serif;font-size:13px;letter-spacing:1.5px;cursor:pointer;text-transform:uppercase;margin-bottom:8px;background:transparent;border:1px solid #5a3d1a;color:#a07840;}
+.hud{display:flex;justify-content:space-between;align-items:center;margin-bottom:1rem;font-size:12px;letter-spacing:1px;color:#a07840;}
+.progress{height:2px;background:#2d1a0a;border-radius:1px;margin-bottom:1.5rem;}
+.progress-fill{height:100%;background:linear-gradient(90deg,#6b4a1e,#c9a84c);transition:width 0.3s;}
+.qcard{background:rgba(20,12,3,0.9);border:1px solid #5a3d1a;border-radius:12px;padding:1.5rem;margin-bottom:1.25rem;text-align:center;}
+.dir-label{font-size:11px;letter-spacing:2px;color:#6b4a1e;text-transform:uppercase;margin-bottom:12px;}
+.qword{font-size:26px;font-weight:500;color:#e8d5b0;line-height:1.3;}
+.choices{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:1rem;}
+.choice{background:rgba(20,12,3,0.8);border:1px solid #3d2510;border-radius:8px;padding:14px 10px;font-family:Georgia,serif;font-size:15px;color:#c8b090;cursor:pointer;text-align:center;line-height:1.3;width:100%;}
+.choice.correct{background:rgba(30,70,30,0.5);border-color:#4a8a4a;color:#8fcc8f;}
+.choice.wrong{background:rgba(70,20,20,0.5);border-color:#8a3030;color:#cc8080;}
+.quip{text-align:center;font-style:italic;font-size:15px;color:#a07840;margin-bottom:1rem;}
+.score-big{font-size:48px;color:#c9a84c;text-align:center;margin:1rem 0 4px;}
+.score-sub{text-align:center;font-size:14px;color:#6b4a1e;font-style:italic;margin-bottom:1.5rem;}
+.lb-row{display:flex;align-items:center;gap:12px;padding:10px 0;border-bottom:1px solid rgba(90,61,26,0.3);}
+.lb-rank{font-size:13px;min-width:28px;}
+.lb-name{flex:1;font-size:16px;color:#c8b090;}
+.lb-score{font-size:15px;color:#c9a84c;font-weight:600;}
+.lb-date{font-size:12px;color:#4a3010;min-width:60px;text-align:right;}
+.ornament{text-align:center;color:#6b4a1e;font-size:18px;margin:1rem 0;letter-spacing:8px;}
+.note{text-align:center;font-size:13px;color:#4a3010;font-style:italic;}
+.loading{text-align:center;color:#6b4a1e;font-style:italic;padding:1rem;}
+.urgent{color:#c0392b !important;}
+.hidden{display:none;}
+</style>
+</head>
+<body>
+
+<!-- HOME -->
+<div id="s-home" class="wrap"><div class="scr">
+  <div class="crest">✝</div>
+  <div class="title">Vocab Exchange</div>
+  <div class="subtitle">Spanish · English · 15 Questions</div>
+  <div class="divider"><div class="divider-line"></div><span style="font-size:12px">✦</span><div class="divider-line"></div></div>
+  <div class="card"><div class="card-inner">
+    <input type="text" id="name-input" placeholder="Enter your name"/>
+    <button class="btn" onclick="startGame()">Begin the Examination</button>
+    <button class="btn-ghost" onclick="goBoard()">Hall of Records</button>
+  </div></div>
+  <div class="ornament">· · ·</div>
+  <div class="note">Speed earns grace.</div>
+</div></div>
+
+<!-- PLAYING -->
+<div id="s-playing" class="wrap hidden"><div class="scr">
+  <div class="hud">
+    <span id="hud-q">1 / 15</span>
+    <span id="hud-timer" style="color:#c9a84c;font-weight:600;font-size:14px">⏱ 15s</span>
+    <span id="hud-score">0 pts</span>
+  </div>
+  <div class="progress"><div class="progress-fill" id="progress-fill" style="width:0%"></div></div>
+  <div class="qcard">
+    <div class="dir-label" id="dir-label"></div>
+    <div class="qword" id="qword"></div>
+  </div>
+  <div class="choices" id="choices"></div>
+  <div id="after-answer" class="hidden">
+    <div class="quip" id="quip"></div>
+    <button class="btn" id="next-btn" onclick="nextQuestion()">Next Question</button>
+  </div>
+</div></div>
+
+<!-- RESULT -->
+<div id="s-result" class="wrap hidden"><div class="scr">
+  <div class="crest">✝</div>
+  <div class="title">Judgment</div>
+  <div class="divider"><div class="divider-line"></div><span style="font-size:12px">✦</span><div class="divider-line"></div></div>
+  <div class="score-big" id="result-score"></div>
+  <div class="score-sub" id="result-sub"></div>
+  <div class="card" style="margin-bottom:1.5rem;text-align:center;font-style:italic;font-size:15px;color:#a07840;line-height:1.6" id="result-msg"></div>
+  <button class="btn" onclick="startGame()">Examine Again</button>
+  <button class="btn-ghost" onclick="goBoard()">Hall of Records</button>
+  <button class="btn-ghost" onclick="goHome()">Change Penitent</button>
+</div></div>
+
+<!-- BOARD -->
+<div id="s-board" class="wrap hidden"><div class="scr">
+  <div class="title">Hall of Records</div>
+  <div class="subtitle">Top 20 · All Time</div>
+  <div class="divider"><div class="divider-line"></div><span style="font-size:12px">✦</span><div class="divider-line"></div></div>
+  <div id="lb-content"><div class="loading">Consulting the archives…</div></div>
+  <div class="ornament">· · ·</div>
+  <button class="btn-ghost" onclick="showScreen('home')">Return</button>
+</div></div>
+
+<script>
+// ── Firebase ──────────────────────────────────────────────────────────────
+var fbDb = null;
+
+var s1 = document.createElement("script");
+s1.src = "https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js";
+s1.onload = function() {
+  var s2 = document.createElement("script");
+  s2.src = "https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js";
+  s2.onload = function() {
+    firebase.initializeApp({
+      apiKey: "AIzaSyB1gPk1gCfsuE5kGJ93JhJ1kdpis9layJ0",
+      authDomain: "trivia-pm.firebaseapp.com",
+      databaseURL: "https://trivia-pm-default-rtdb.firebaseio.com",
+      projectId: "trivia-pm",
+      storageBucket: "trivia-pm.firebasestorage.app",
+      messagingSenderId: "319057453477",
+      appId: "1:319057453477:web:3ad1fe6349cfbaa4e6484c"
+    });
+    fbDb = firebase.database();
+  };
+  document.head.appendChild(s2);
+};
+document.head.appendChild(s1);
+
+function fbSave(entry) {
+  if (!fbDb) return Promise.resolve();
+  return fbDb.ref("vocab_leaderboard").push(entry);
+}
+
+function fbFetch() {
+  if (!fbDb) return Promise.resolve([]);
+  return fbDb.ref("vocab_leaderboard")
+    .orderByChild("score").limitToLast(20).once("value")
+    .then(function(snap) {
+      var entries = [];
+      snap.forEach(function(c) { entries.unshift(c.val()); });
+      return entries;
+    });
+}
+
+// ── Vocab ─────────────────────────────────────────────────────────────────
+var vocab = [
+  ["el Vaticano","the Vatican"],["la residencia","the residence"],["el fresco","the fresco"],
+  ["la máquina de espresso","the espresso machine"],["la cava de vinos","the wine cellar"],
+  ["el aristócrata","the aristocrat"],["el sommelier","the sommelier"],["la santidad","holiness"],
+  ["el guardarropa","the wardrobe"],["las vestiduras","the vestments"],["la tela","the fabric"],
+  ["la sastrería","tailoring"],["los Guardias Suizos","the Swiss Guards"],["la alta costura","haute couture"],
+  ["los zapatos","the shoes"],["la gravitas","gravitas"],["la monja","the nun"],
+  ["las zapatillas rojas","the red slippers"],["las audiencias","the audiences"],
+  ["el espejo","the mirror"],["la Vespa","the Vespa"],["los sacerdotes","the priests"],
+  ["los jardines","the gardens"],["los hábitos","the habits"],["los manuscritos","the manuscripts"],
+  ["la biblioteca","the library"],["el cardenal","the cardinal"],["el obispo","the bishop"],
+  ["la puerta","the door"],["el mármol","the marble"],["la fe","faith"],
+  ["los taninos","the tannins"],["el embajador","the ambassador"],["el equilibrio","the balance"],
+  ["el cuero","the leather"],["estar","to be (temporary/state)"],["encontrarse","to find oneself"],
+  ["tener","to have"],["comenzar","to begin"],["murmurar","to murmur"],
+  ["mirar","to look"],["esperar","to wait / to hope"],["prevalecer","to prevail"],
+  ["asentir","to nod / assent"],["entender","to understand"],["flotar","to float"],
+  ["susurrar","to whisper"],["responder","to respond"],["rechazar","to reject"],
+  ["coquetear","to flirt"],["concluir","to conclude"],["declarar","to declare"],
+  ["caminar","to walk"],["resonar","to echo / resonate"],["brillar","to shine"],
+  ["ajustar","to adjust"],["guiar","to guide"],["seguir","to follow"],
+  ["detener","to stop"],["interrumpir","to interrupt"],["restaurar","to restore"],
+  ["revelar","to reveal"],["albergar","to house / contain"],["insistir","to insist"],
+  ["reflexionar","to reflect"],["considerar","to consider"],["creer","to believe"],
+  ["ser","to be (essential)"],["haber","to have / there is"],["hacer","to do / make"],
+  ["poder","can / to be able to"],["deber","should / must"],["tomar","to take"],
+  ["salir","to leave / go out"],["sin embargo","however"],["por supuesto","of course"],
+  ["al parecer","apparently"],["en cambio","in contrast / instead"],["entonces","then"],
+  ["inevitablemente","inevitably"],["al final","in the end"],["porque","because"],
+  ["ya que","since / given that"],["es decir","that is to say"],["por ejemplo","for example"],
+  ["de hecho","in fact"]
+];
+
+var correctQuips = [
+  "Infallible. Basically papal.","The Codex approves.","Cardinal knowledge.",
+  "Even the sommelier is impressed.","Holiness has its perks.",
+  "The Swiss Guards salute you.","The marble positively gleams.",
+  "His Holiness nods approvingly.","The wine cellar opens its doors.",
+  "A vestment of triumph.","The fresco was painted in your honor.",
+  "The Vespa revs in celebration.","Gravitas achieved.",
+  "The library adds your name to the manuscripts.","Alta costura intellect."
+];
+var wrongQuips = [
+  "The Swiss Guards are judging you.","The Pope is reflecting on this.",
+  "A vestment of shame.","Even the Vespa could have done better.",
+  "The marble weeps.","The sommelier has left the building.",
+  "The cardinal is deeply disappointed.","The fresco is cracking.",
+  "His Holiness will pray for you.","The wine cellar remains locked."
+];
+
+// ── Game state ────────────────────────────────────────────────────────────
+var ROUND_SIZE = 15;
+var TIME_PER_Q = 15;
+var playerName = "";
+var questions = [];
+var qIdx = 0;
+var score = 0;
+var timerVal = TIME_PER_Q;
+var timerInterval = null;
+var answered = false;
+
+function pick(arr) { return arr[Math.floor(Math.random() * arr.length)]; }
+function shuffle(arr) {
+  var a = arr.slice();
+  for (var i = a.length - 1; i > 0; i--) {
+    var j = Math.floor(Math.random() * (i + 1));
+    var tmp = a[i]; a[i] = a[j]; a[j] = tmp;
+  }
+  return a;
+}
+
+function buildQuestions() {
+  var used = {};
+  var result = [];
+  for (var n = 0; n < ROUND_SIZE; n++) {
+    var available = vocab.filter(function(_, i) { return !used[i]; });
+    var pool = available.length >= 4 ? available : vocab;
+    var pair = pick(pool);
+    used[vocab.indexOf(pair)] = true;
+    var es = pair[0], en = pair[1];
+    var dir = Math.random() < 0.5 ? "es2en" : "en2es";
+    var prompt = dir === "es2en" ? es : en;
+    var answer = dir === "es2en" ? en : es;
+    var wrong = shuffle(vocab.filter(function(p) { return p !== pair; })).slice(0, 3).map(function(p) {
+      return dir === "es2en" ? p[1] : p[0];
+    });
+    result.push({ prompt: prompt, answer: answer, choices: shuffle([answer].concat(wrong)), dir: dir });
+  }
+  return result;
+}
+
+// ── Screens ───────────────────────────────────────────────────────────────
+function showScreen(id) {
+  ["home","playing","result","board"].forEach(function(s) {
+    document.getElementById("s-" + s).classList.toggle("hidden", s !== id);
+  });
+}
+
+function goHome() {
+  document.getElementById("name-input").value = "";
+  playerName = "";
+  showScreen("home");
+}
+
+// ── Game flow ─────────────────────────────────────────────────────────────
+function startGame() {
+  var n = document.getElementById("name-input").value.trim();
+  if (!n) return;
+  playerName = n;
+  questions = buildQuestions();
+  qIdx = 0; score = 0;
+  showScreen("playing");
+  renderQuestion();
+}
+
+function renderQuestion() {
+  answered = false;
+  clearInterval(timerInterval);
+  timerVal = TIME_PER_Q;
+  var q = questions[qIdx];
+  document.getElementById("hud-q").textContent = (qIdx + 1) + " / " + ROUND_SIZE;
+  document.getElementById("hud-score").textContent = score + " pts";
+  document.getElementById("progress-fill").style.width = ((qIdx / ROUND_SIZE) * 100) + "%";
+  document.getElementById("dir-label").textContent = q.dir === "es2en" ? "Spanish → English" : "English → Spanish";
+  document.getElementById("qword").textContent = q.prompt;
+  document.getElementById("after-answer").classList.add("hidden");
+
+  var choicesEl = document.getElementById("choices");
+  choicesEl.innerHTML = "";
+  q.choices.forEach(function(c) {
+    var btn = document.createElement("button");
+    btn.className = "choice";
+    btn.textContent = c;
+    btn.onclick = function() { handleAnswer(c); };
+    choicesEl.appendChild(btn);
+  });
+
+  updateTimer();
+  timerInterval = setInterval(function() {
+    timerVal--;
+    updateTimer();
+    if (timerVal <= 0) {
+      clearInterval(timerInterval);
+      handleAnswer(null);
+    }
+  }, 1000);
+}
+
+function updateTimer() {
+  var el = document.getElementById("hud-timer");
+  el.textContent = "⏱ " + timerVal + "s";
+  el.classList.toggle("urgent", timerVal <= 5);
+}
+
+function handleAnswer(choice) {
+  if (answered) return;
+  answered = true;
+  clearInterval(timerInterval);
+  var q = questions[qIdx];
+  var correct = choice === q.answer;
+  var pts = correct ? Math.max(1, timerVal) * 10 : 0;
+  score += pts;
+  document.getElementById("hud-score").textContent = score + " pts";
+
+  var btns = document.getElementById("choices").querySelectorAll("button");
+  btns.forEach(function(btn) {
+    btn.onclick = null;
+    if (btn.textContent === q.answer) btn.classList.add("correct");
+    else if (btn.textContent === choice) btn.classList.add("wrong");
+  });
+
+  document.getElementById("quip").textContent = pick(correct ? correctQuips : wrongQuips);
+  var nextBtn = document.getElementById("next-btn");
+  nextBtn.textContent = (qIdx + 1 >= ROUND_SIZE) ? "View Your Judgment" : "Next Question";
+  document.getElementById("after-answer").classList.remove("hidden");
+}
+
+function nextQuestion() {
+  if (qIdx + 1 >= ROUND_SIZE) {
+    finishGame();
+  } else {
+    qIdx++;
+    renderQuestion();
+  }
+}
+
+function finishGame() {
+  var fs = score;
+  var entry = { name: playerName, score: fs, date: new Date().toLocaleDateString() };
+  fbSave(entry).catch(function(e) { console.error("Save error:", e); });
+  document.getElementById("result-score").textContent = fs;
+  document.getElementById("result-sub").textContent = playerName + " · " + new Date().toLocaleDateString();
+  var msg = fs >= 1200 ? "The Codex shall remember your name."
+    : fs >= 800 ? "A commendable examination. The cardinal approves."
+    : fs >= 400 ? "Further study is recommended."
+    : "The Swiss Guards are escorting you out.";
+  document.getElementById("result-msg").textContent = msg;
+  showScreen("result");
+}
+
+function goBoard() {
+  showScreen("board");
+  document.getElementById("lb-content").innerHTML = '<div class="loading">Consulting the archives…</div>';
+  fbFetch().then(function(entries) {
+    if (!entries || entries.length === 0) {
+      document.getElementById("lb-content").innerHTML = '<div class="loading">The archives are empty. Be the first.</div>';
+      return;
+    }
+    var rankColors = ["#c9a84c","#a0a0b0","#c08050"];
+    var html = entries.map(function(e, i) {
+      var rc = rankColors[i] || "#6b4a1e";
+      return '<div class="lb-row">'
+        + '<span class="lb-rank" style="color:' + rc + '">#' + (i+1) + '</span>'
+        + '<span class="lb-name">' + e.name + '</span>'
+        + '<span class="lb-score">' + e.score + '</span>'
+        + '<span class="lb-date">' + e.date + '</span>'
+        + '</div>';
+    }).join("");
+    document.getElementById("lb-content").innerHTML = html;
+  }).catch(function(e) {
+    console.error("Fetch error:", e);
+    document.getElementById("lb-content").innerHTML = '<div class="loading">Could not load records.</div>';
+  });
+}
+
+
+</script>
+</body>
+</html>
