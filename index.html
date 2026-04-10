@@ -106,44 +106,37 @@ input::placeholder{color:#6b4a1e;}
 </div></div>
 
 <script>
-// ── Firebase (loaded inline via XHR-free dynamic script) ──────────────────
-var FIREBASE_CONFIG = {
-  apiKey: "AIzaSyB1gPk1gCfsuE5kGJ93JhJ1kdpis9layJ0",
-  authDomain: "trivia-pm.firebaseapp.com",
-  databaseURL: "https://trivia-pm-default-rtdb.firebaseio.com",
-  projectId: "trivia-pm",
-  storageBucket: "trivia-pm.firebasestorage.app",
-  messagingSenderId: "319057453477",
-  appId: "1:319057453477:web:3ad1fe6349cfbaa4e6484c"
-};
-
-var fbReady = false;
+// ── Firebase ──────────────────────────────────────────────────────────────
 var fbDb = null;
 
-function loadFirebase(cb) {
-  var s1 = document.createElement("script");
-  s1.src = "https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js";
-  s1.onload = function() {
-    var s2 = document.createElement("script");
-    s2.src = "https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js";
-    s2.onload = function() {
-      firebase.initializeApp(FIREBASE_CONFIG);
-      fbDb = firebase.database();
-      fbReady = true;
-      cb();
-    };
-    document.head.appendChild(s2);
+var s1 = document.createElement("script");
+s1.src = "https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js";
+s1.onload = function() {
+  var s2 = document.createElement("script");
+  s2.src = "https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js";
+  s2.onload = function() {
+    firebase.initializeApp({
+      apiKey: "AIzaSyB1gPk1gCfsuE5kGJ93JhJ1kdpis9layJ0",
+      authDomain: "trivia-pm.firebaseapp.com",
+      databaseURL: "https://trivia-pm-default-rtdb.firebaseio.com",
+      projectId: "trivia-pm",
+      storageBucket: "trivia-pm.firebasestorage.app",
+      messagingSenderId: "319057453477",
+      appId: "1:319057453477:web:3ad1fe6349cfbaa4e6484c"
+    });
+    fbDb = firebase.database();
   };
-  document.head.appendChild(s1);
-}
+  document.head.appendChild(s2);
+};
+document.head.appendChild(s1);
 
 function fbSave(entry) {
-  if (!fbReady) return Promise.resolve();
+  if (!fbDb) return Promise.resolve();
   return fbDb.ref("vocab_leaderboard").push(entry);
 }
 
 function fbFetch() {
-  if (!fbReady) return Promise.resolve([]);
+  if (!fbDb) return Promise.resolve([]);
   return fbDb.ref("vocab_leaderboard")
     .orderByChild("score").limitToLast(20).once("value")
     .then(function(snap) {
@@ -379,10 +372,7 @@ function goBoard() {
   });
 }
 
-// ── Boot ──────────────────────────────────────────────────────────────────
-loadFirebase(function() {
-  console.log("Firebase ready");
-});
+
 </script>
 </body>
 </html>
